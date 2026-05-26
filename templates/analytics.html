@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analytics Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f5f7fb;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #1f4037, #99f2c8);
+            color: white;
+            padding: 18px;
+            border-radius: 16px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+        }
+
+        .header h3 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .header p {
+            margin: 0;
+            opacity: 0.85;
+            font-size: 13px;
+        }
+
+        /* CARDS */
+        .stat-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .icon-box {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .sales { background: #1e88e5; }
+        .week { background: #43a047; }
+        .month { background: #fb8c00; }
+
+        .value {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* BUTTONS */
+        .btn-custom {
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        /* RESPONSIVE FIX */
+        @media (max-width: 768px) {
+            .header h3 {
+                font-size: 18px;
+            }
+
+            .value {
+                font-size: 18px;
+            }
+
+            .icon-box {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container py-3">
+
+    <!-- HEADER -->
+    <div class="header mb-3">
+        <h3>📊 Analytics Dashboard</h3>
+        <p>Restaurant Sales Overview</p>
+    </div>
+
+    <!-- FILTER -->
+    <form method="GET" action="/analytics" class="row g-2 mb-3">
+
+        <div class="col-12 col-md-4">
+            <input type="date" name="from" class="form-control" required>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <input type="date" name="to" class="form-control" required>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <button class="btn btn-dark w-100 btn-custom">
+                🔍 Filter
+            </button>
+        </div>
+
+    </form>
+
+    <!-- STATS -->
+    <div class="row g-3">
+
+        <!-- TODAY -->
+        <div class="col-12 col-md-4">
+            <div class="card stat-card p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box sales">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Today Sales</small>
+                        <div class="value">₹{{today_sales}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WEEK -->
+        <div class="col-12 col-md-4">
+            <div class="card stat-card p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box week">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">This Week</small>
+                        <div class="value">₹{{week_sales}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTH -->
+        <div class="col-12 col-md-4">
+            <div class="card stat-card p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box month">
+                        <i class="bi bi-calendar-month"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">This Month</small>
+                        <div class="value">₹{{month_sales}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="row mt-3 g-2">
+
+        <div class="col-12 col-md-6">
+            <a href="/download_report" class="btn btn-success w-100 btn-custom">
+                📥 Download Report
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <a href="/" class="btn btn-secondary w-100 btn-custom">
+                ⬅ Back
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

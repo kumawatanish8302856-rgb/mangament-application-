@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Waiter Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #eef2f7;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .sidebar {
+            background: #fff;
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .table-btn {
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+
+        .table-btn:hover {
+            transform: scale(1.03);
+        }
+
+        .card {
+            border-radius: 16px;
+        }
+
+        .suggest-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            z-index: 9999;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .suggest-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .suggest-item:hover {
+            background: #f1f1f1;
+        }
+
+        .relative {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container-fluid p-3">
+<div class="row g-3">
+
+<!-- LEFT -->
+<div class="col-12 col-md-4 col-lg-3">
+    <div class="sidebar">
+
+        <h5>🍽 Tables</h5>
+
+        {% for t, data in tables.items() %}
+        <a href="/waiter?table={{t}}"
+           class="btn w-100 mb-2 table-btn
+           {% if table_no == t %}btn-dark
+           {% elif data.status == 'pending' %}btn-outline-secondary
+           {% elif data.status == 'preparing' %}btn-outline-danger
+           {% elif data.status == 'ready' %}btn-outline-success
+           {% endif %}">
+            🪑 Table {{t}}
+        </a>
+        {% endfor %}
+
+        <hr>
+
+        <form method="GET" action="/waiter">
+            <input name="table" class="form-control mb-2" placeholder="New Table No" required>
+            <button class="btn btn-primary w-100">➕ Add Table</button>
+        </form>
+
+        <a href="/" class="btn btn-secondary w-100 mt-3">⬅ Back</a>
+
+    </div>
+</div>
+
+<!-- RIGHT -->
+<div class="col-12 col-md-8 col-lg-9">
+
+{% if table_no %}
+
+<h4 class="mb-3">🪑 Table {{table_no}}</h4>
+
+<!-- ADD ITEM -->
+<div class="card p-3 mb-3 shadow-sm border-0">
+
+<form method="POST" action="/add_item/{{table_no}}">
+<div class="row g-2">
+
+    <!-- ITEM INPUT -->
+    <div class="col-md-5 col-12 relative">
+        <input type="text" id="itemInput" name="item"
+               class="form-control"
+               placeholder="Search item..."
+               autocomplete="off"
+               required>
+
+        <div id="suggestions" class="suggest-box d-none"></div>
+    </div>
+
+    <!-- QTY -->
+    <div class="col-md-2 col-4">
+        <input type="number" name="qty" step="0.5" min="0.5"
+               class="form-control" placeholder="Qty" required>
+    </div>
+
+    <!-- TYPE -->
+    <div class="col-md-2 col-4">
+        <select name="type" id="typeSelect" class="form-control">
+            <option value="Full">Full</option>
+            <option value="Half">Half</option>
+        </select>
+    </div>
+
+    <!-- PRICE -->
+    <div class="col-md-2 col-4">
+        <input type="number" name="price" id="priceInput"
+               class="form-control" placeholder="Price">
+    </div>
+
+    <!-- BTN -->
+    <div class="col-md-1 col-12">
+        <button class="btn btn-primary w-100">➕</button>
+    </div>
+
+</div>
+</form>
+
+</div>
+
+<!-- ORDERS -->
+<div class="row g-3">
+
+{% for order in orders %}
+<div class="col-md-6">
+<div class="card p-3 shadow-sm border-0">
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <b>{{order.item}}</b><br>
+            <small>Qty: {{order.qty}}</small>
+        </div>
+
+        <a href="/delete/{{order.id}}/{{table_no}}"
+           class="btn btn-sm btn-outline-danger">✖</a>
+    </div>
+
+    <div class="mt-2">
+        <span class="badge 
+        {% if order.status == 'pending' %}bg-secondary
+        {% elif order.status == 'preparing' %}bg-warning text-dark
+        {% elif order.status == 'ready' %}bg-success
+        {% endif %}">
+        {{order.status}}
+        </span>
+    </div>
+
+</div>
+</div>
+{% endfor %}
+
+</div>
+
+{% else %}
+<div class="text-center mt-5">
+    <h5>Select or create a table</h5>
+</div>
+{% endif %}
+
+</div>
+</div>
+</div>
+
+<!-- JS -->
+<script>
+let selectedItem = null;
+
+const input = document.getElementById("itemInput");
+const box = document.getElementById("suggestions");
+const typeSelect = document.getElementById("typeSelect");
+const priceInput = document.getElementById("priceInput");
+
+// SEARCH
+input.addEventListener("input", async function () {
+    let query = this.value.trim();
+
+    if (!query) {
+        box.classList.add("d-none");
+        box.innerHTML = "";
+        return;
+    }
+
+    let res = await fetch(`/search_menu?q=${query}`);
+    let data = await res.json();
+
+    box.innerHTML = "";
+
+    if (!data.length) {
+        box.classList.add("d-none");
+        return;
+    }
+
+    data.forEach(item => {
+        let div = document.createElement("div");
+        div.className = "suggest-item";
+        div.innerText = `${item.name} (F: ₹${item.full} / H: ₹${item.half})`;
+
+        div.onclick = () => {
+            input.value = item.name;
+            selectedItem = item;
+            updatePrice();
+            box.classList.add("d-none");
+        };
+
+        box.appendChild(div);
+    });
+
+    box.classList.remove("d-none");
+});
+
+// TYPE CHANGE
+typeSelect.addEventListener("change", updatePrice);
+
+function updatePrice() {
+    if (!selectedItem) return;
+
+    priceInput.value = typeSelect.value === "Full"
+        ? selectedItem.full
+        : selectedItem.half;
+}
+
+// CLICK OUTSIDE
+document.addEventListener("click", function (e) {
+    if (!input.contains(e.target) && !box.contains(e.target)) {
+        box.classList.add("d-none");
+    }
+});
+</script>
+
+</body>
+</html>
