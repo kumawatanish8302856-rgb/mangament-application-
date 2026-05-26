@@ -1,0 +1,132 @@
+<!DOCTYPE html> 
+<html>
+<head>
+    <title>Restaurant System</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #1f4037, #99f2c8);
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .main-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 35px 25px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+
+        h1 {
+            font-weight: 600;
+            color: #222;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .menu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .waiter { background: #f1f3f6; color: #333; }
+        .chef { background: #ffe082; color: #333; }
+        .reception { background: #00c853; color: white; }
+        .menu-panel { background: #333; color: white; }
+        .analytics { background: #1976d2; color: white; }
+
+        .menu-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="main-card">
+
+    <h1>🍽 Restaurant</h1>
+    <div class="subtitle">Management System</div>
+
+    <!-- Waiter -->
+    <a href="/waiter" class="menu-btn waiter">
+        <div class="menu-text">
+            <i class="bi bi-person"></i> Waiter Panel
+        </div>
+        <i class="bi bi-arrow-right"></i>
+    </a>
+
+    <!-- Chef -->
+    <a href="/chef" class="menu-btn chef">
+        <div class="menu-text">
+            <i class="bi bi-egg-fried"></i> Chef Panel
+        </div>
+        <i class="bi bi-arrow-right"></i>
+    </a>
+
+    <!-- Reception -->
+    <a href="/reception" class="menu-btn reception">
+        <div class="menu-text">
+            <i class="bi bi-cash-stack"></i> Reception Panel
+        </div>
+        <i class="bi bi-arrow-right"></i>
+    </a>
+
+    <!-- Menu -->
+    <a href="/menu" class="menu-btn menu-panel">
+        <div class="menu-text">
+            <i class="bi bi-card-list"></i> Menu Management
+        </div>
+        <i class="bi bi-arrow-right"></i>
+    </a>
+
+    <!-- ✅ NEW: Analytics -->
+    <a href="/analytics" class="menu-btn analytics">
+        <div class="menu-text">
+            <i class="bi bi-graph-up"></i> Analytics Dashboard
+        </div>
+        <i class="bi bi-arrow-right"></i>
+    </a>
+
+</div>
+
+</body>
+</html>
