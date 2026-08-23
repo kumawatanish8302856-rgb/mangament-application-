@@ -20,22 +20,23 @@ def init_db():
     conn = get_db()
 
     conn.execute("""
-    CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        table_no TEXT,
-        item TEXT,
-        qty REAL,
-        price INTEGER,
-        status TEXT
-    )
-    """)
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    table_no TEXT,
+    item TEXT,
+    qty REAL,
+    price  REAL,
+    status TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+)
+""")
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS menu (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE,
-        full_price INTEGER,
-        half_price INTEGER
+        full_price REAL,
+        half_price REAL
     )
     """)
 
@@ -155,13 +156,16 @@ def add_item(table_no):
     if existing:
         conn.execute("""
             UPDATE orders SET qty = qty + ?
+             SET qty = qty + ?,
+            status = 'pending',
+            created_at = datetime('now')
             WHERE id=?
         """, (qty, existing['id']))
     else:
         conn.execute("""
-            INSERT INTO orders (table_no, item, qty, price, status)
-            VALUES (?, ?, ?, ?, 'pending')
-        """, (table_no, item_name, qty, price))
+    INSERT INTO orders (table_no, item, qty, price, status, created_at)
+    VALUES (?, ?, ?, ?, 'pending', datetime('now'))
+""", (table_no, item_name, qty, price))
 
     conn.commit()
     conn.close()
@@ -244,15 +248,35 @@ def bill(table_no):
 @app.route('/calculate/<table_no>', methods=['POST'])
 def calculate(table_no):
     items = request.form.getlist('item')
+    quantities = request.form.getlist('qty')
     prices = request.form.getlist('price')
 
-    total = sum(int(p) for p in prices if p)
+    total = 0
+    bill_orders = []
+
+    for item, qty, price in zip(items, quantities, prices):
+        if not price:
+            continue
+
+        qty = float(qty)
+        price = float(price)
+
+        item_total = qty * price
+        total += item_total
+
+        bill_orders.append({
+            "item": item,
+            "qty": qty,
+            "price": price,
+            "total": item_total
+        })
+
     gst = round(total * 0.18, 2)
-    final = total + gst
+    final = round(total + gst, 2)
 
     return render_template(
         "bill.html",
-        orders=list(zip(items, prices)),
+        orders=bill_orders,
         table_no=table_no,
         total=total,
         gst=gst,
@@ -338,52 +362,80 @@ def invoice(table_no):
 @app.route('/analytics')
 def analytics():
     conn = get_db()
+    cursor = conn.cursor()
 
-    # TODAY
-    today = datetime.now().strftime("%Y-%m-%d")
-    today_sales = conn.execute("""
-        SELECT SUM(qty * price) as total
-        FROM orders
-        WHERE date('now') = date('now')
-        AND status='paid'
-    """).fetchone()[0]
-
-    if not today_sales:
-        today_sales = 0
-
-    # WEEK
-    week_sales = conn.execute("""
-        SELECT SUM(qty * price) as total
+    # ---------------- TODAY ----------------
+    today_sales = cursor.execute("""
+        SELECT SUM(qty * price)
         FROM orders
         WHERE status='paid'
-        AND date('now','-7 day') <= date('now')
-    """).fetchone()[0]
+        AND date(created_at)=date('now')
+    """).fetchone()[0] or 0
 
-    if not week_sales:
-        week_sales = 0
-
-    # MONTH
-    month_sales = conn.execute("""
-        SELECT SUM(qty * price) as total
+    # ---------------- YESTERDAY ----------------
+    yesterday_sales = cursor.execute("""
+        SELECT SUM(qty * price)
         FROM orders
         WHERE status='paid'
-        AND strftime('%m', 'now') = strftime('%m', 'now')
-    """).fetchone()[0]
+        AND date(created_at)=date('now','-1 day')
+    """).fetchone()[0] or 0
 
-    if not month_sales:
-        month_sales = 0
+    # ---------------- WEEK ----------------
+    week_sales = cursor.execute("""
+        SELECT SUM(qty * price)
+        FROM orders
+        WHERE status='paid'
+        AND date(created_at) >= date('now','-7 day')
+    """).fetchone()[0] or 0
+
+    # ---------------- MONTH ----------------
+    month_sales = cursor.execute("""
+        SELECT SUM(qty * price)
+        FROM orders
+        WHERE status='paid'
+        AND strftime('%Y-%m', created_at)=strftime('%Y-%m','now')
+    """).fetchone()[0] or 0
+
+    # ---------------- CHART DATA (7 DAYS) ----------------
+    cursor.execute("""
+        SELECT date(created_at), SUM(qty * price)
+        FROM orders
+        WHERE status='paid'
+        GROUP BY date(created_at)
+        ORDER BY date(created_at) DESC
+        LIMIT 7
+    """)
+
+    data = cursor.fetchall()
+    data.reverse()
+
+    labels = [row[0] for row in data]
+    values = [row[1] or 0 for row in data]
+
+    # ---------------- TOP ITEMS ----------------
+    cursor.execute("""
+        SELECT item, SUM(qty)
+        FROM orders
+        WHERE status='paid'
+        GROUP BY item
+        ORDER BY SUM(qty) DESC
+        LIMIT 5
+    """)
+
+    top_items = cursor.fetchall()
 
     conn.close()
 
     return render_template(
-        "analytics.html",
-        today_sales=today_sales,
-        week_sales=week_sales,
-        month_sales=month_sales
-    )
-    
-
-
+    "analytics.html",
+    today=today_sales,
+    yesterday=yesterday_sales,
+    week_sales=week_sales,
+    month_sales=month_sales,
+    labels=labels,
+    values=values,
+    top_items=top_items
+)
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)
