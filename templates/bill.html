@@ -1,84 +1,395 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Bill</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>Table {{ table_no }} Bill</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <style>
+        body {
+            background: #f5f7fa;
+        }
+
+        .bill-card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        }
+
+        .bill-header {
+            font-weight: 700;
+        }
+
+        .table-header {
+            font-weight: 600;
+            background: #f1f3f5;
+        }
+
+        .total-card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        }
+
+        .final-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #198754;
+        }
+
+        .btn {
+            border-radius: 10px;
+            padding: 11px;
+        }
+
+        @media (max-width: 576px) {
+
+            .container {
+                padding: 12px !important;
+            }
+
+            .bill-header {
+                font-size: 22px;
+            }
+
+            .table-header {
+                display: none;
+            }
+
+            .order-row {
+                background: white;
+                padding: 12px;
+                border-radius: 14px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            }
+
+            .mobile-label {
+                display: block;
+                font-size: 12px;
+                color: #777;
+                margin-bottom: 3px;
+            }
+        }
+
+        @media (min-width: 577px) {
+            .mobile-label {
+                display: none;
+            }
+        }
+
+        @media print {
+
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+
+            .bill-card,
+            .total-card {
+                box-shadow: none;
+            }
+        }
+    </style>
 </head>
 
-<body style="background:#f5f7fa;">
+<body>
 
-<div class="container p-3">
+<div class="container py-3 py-md-4">
 
-<h3 class="mb-3">🧾 Table {{table_no}} Bill</h3>
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
 
-<!-- SHOW BILL -->
-<form method="POST" action="/calculate/{{table_no}}">
+        <div>
+            <h3 class="bill-header mb-1">
+                🧾 Table {{ table_no }} Bill
+            </h3>
 
-{% for order in orders %}
-<div class="row mb-2">
+            <small class="text-muted">
+                Restaurant Management System
+            </small>
+        </div>
 
-    <div class="col-4">
-        <input type="text" value="{{order.item}}" class="form-control" readonly>
     </div>
 
-    <div class="col-2">
-        <input type="text" value="{{order.qty}}" class="form-control" readonly>
+
+    <!-- BILL ITEMS -->
+    <div class="card bill-card p-3">
+
+        <form method="POST"
+              action="/calculate/{{ table_no }}">
+
+            <!-- DESKTOP HEADER -->
+            <div class="row table-header p-2 rounded mb-2 d-none d-md-flex">
+
+                <div class="col-md-4">
+                    Food Item
+                </div>
+
+                <div class="col-md-2">
+                    Quantity
+                </div>
+
+                <div class="col-md-3">
+                    Price
+                </div>
+
+                <div class="col-md-3">
+                    Amount
+                </div>
+
+            </div>
+
+
+            <!-- ORDERS -->
+            {% for order in orders %}
+
+            <div class="row align-items-center order-row mb-2">
+
+                <!-- ITEM -->
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+
+                    <span class="mobile-label">
+                        Food Item
+                    </span>
+
+                    <input
+                        type="text"
+                        name="item"
+                        value="{{ order.item }}"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+
+                <!-- QUANTITY -->
+                <div class="col-4 col-md-2 mb-2 mb-md-0">
+
+                    <span class="mobile-label">
+                        Quantity
+                    </span>
+
+                    <input
+                        type="number"
+                        name="qty"
+                        value="{{ order.qty }}"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+
+                <!-- PRICE -->
+                <div class="col-4 col-md-3 mb-2 mb-md-0">
+
+                    <span class="mobile-label">
+                        Price
+                    </span>
+
+                    <input
+                        type="number"
+                        name="price"
+                        value="{{ order.price }}"
+                        class="form-control"
+                        step="0.01"
+                        min="0"
+                        required>
+
+                </div>
+
+
+                <!-- AMOUNT -->
+                <div class="col-4 col-md-3">
+
+                    <span class="mobile-label">
+                        Amount
+                    </span>
+
+                    <input
+                        type="text"
+                        value="₹{{ '%.2f'|format(order.qty * order.price) }}"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <!-- NO ORDERS -->
+            <div class="text-center py-4">
+
+                <h5 class="text-muted">
+                    No orders found
+                </h5>
+
+                <p class="text-muted mb-0">
+                    This table currently has no items.
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+
+            <!-- CALCULATE -->
+            <button
+                type="submit"
+                class="btn btn-primary w-100 mt-3">
+
+                💰 Calculate Total
+
+            </button>
+
+        </form>
+
     </div>
 
-    <div class="col-3">
-        <!-- 🔥 AUTO PRICE -->
-        <input type="number" name="price" value="{{order.price}}" class="form-control" readonly>
+
+    <!-- BILL SUMMARY -->
+    {% if total is defined %}
+
+    <div class="card total-card p-3 mt-3">
+
+        <h5 class="mb-3">
+            💰 Bill Summary
+        </h5>
+
+
+        <!-- SUBTOTAL -->
+        <div class="d-flex justify-content-between mb-2">
+
+            <span>
+                Subtotal
+            </span>
+
+            <strong>
+                ₹{{ '%.2f'|format(total) }}
+            </strong>
+
+        </div>
+
+
+        <!-- GST -->
+        <div class="d-flex justify-content-between mb-2">
+
+            <span>
+                GST (18%)
+            </span>
+
+            <strong>
+                ₹{{ '%.2f'|format(gst) }}
+            </strong>
+
+        </div>
+
+
+        <hr>
+
+
+        <!-- FINAL -->
+        <div class="d-flex justify-content-between align-items-center">
+
+            <span class="final-amount">
+                Final Amount
+            </span>
+
+            <span class="final-amount">
+                ₹{{ '%.2f'|format(final) }}
+            </span>
+
+        </div>
+
+
+        <!-- ACTION BUTTONS -->
+        <div class="mt-3 no-print">
+
+            <!-- INVOICE -->
+            <a
+                href="/invoice/{{ table_no }}"
+                class="btn btn-dark w-100 mb-2">
+
+                📄 Download Invoice
+
+            </a>
+
+
+            <!-- PRINT -->
+            <button
+                onclick="window.print()"
+                class="btn btn-secondary w-100 mb-2">
+
+                🖨️ Print Bill
+
+            </button>
+
+
+            <!-- PAYMENT -->
+            <a
+                href="/payment_done/{{ table_no }}"
+                class="btn btn-success w-100">
+
+                ✅ Payment Done
+
+            </a>
+
+        </div>
+
     </div>
 
-    <div class="col-3">
-        <input type="number"
-               value="{{order.qty * order.price}}"
-               class="form-control"
-               readonly>
+    {% endif %}
+
+
+    <!-- BACK -->
+    <div class="mt-3 no-print">
+
+        <a
+            href="/reception"
+            class="btn btn-outline-secondary w-100">
+
+            ⬅️ Back to Reception
+
+        </a>
+
     </div>
 
 </div>
-{% endfor %}
 
-<button class="btn btn-primary w-100 mt-2">
-    💰 Calculate Total
-</button>
 
-</form>
+<script>
 
-<hr>
+    // Prevent accidental double submission
+    document.querySelectorAll("form").forEach(function(form) {
 
-{% if total is defined %}
+        form.addEventListener("submit", function() {
 
-<div class="card p-3 shadow-sm border-0 rounded-4">
+            const button = form.querySelector("button[type='submit']");
 
-    <p><b>Total:</b> ₹{{ total }}</p>
-    <p><b>GST (18%):</b> ₹{{ gst }}</p>
+            if (button) {
 
-    <h4 class="text-success">Final Amount: ₹{{ final }}</h4>
+                button.disabled = true;
 
-    <a href="/invoice/{{table_no}}" class="btn btn-dark w-100 mt-2">
-        📄 Download Invoice
-    </a>
+                button.innerHTML = "⏳ Calculating...";
 
-    <button onclick="window.print()" class="btn btn-secondary w-100 mt-2">
-        🖨 Print Bill
-    </button>
+            }
 
-    <a href="/payment_done/{{table_no}}" class="btn btn-success w-100 mt-2">
-        ✅ Payment Done
-    </a>
+        });
 
-</div>
+    });
 
-{% endif %}
-
-<a href="/reception" class="btn btn-secondary w-100 mt-3">
-    ⬅ Back
-</a>
-
-</div>
+</script>
 
 </body>
 </html>
